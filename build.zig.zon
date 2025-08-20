@@ -1,0 +1,12 @@
+.{
+    .name = .uuiz,
+    .version = "0.0.0",
+    .fingerprint = 0x2b706dc56923e070, // Changing this has security and trust implications.
+    .minimum_zig_version = "0.14.0",
+
+    .paths = .{
+        "build.zig",
+        "build.zig.zon",
+        "src",
+    },
+}
