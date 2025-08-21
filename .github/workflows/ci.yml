@@ -11,7 +11,7 @@ env:
 
 jobs:
   test:
-    name: Run zig build test [ZIG_VERSION ${{ env.ZIG_VERSION }}] on ubuntu-latest
+    name: Run zig build test ZIG_VERSION ${{ env.ZIG_VERSION }} on ubuntu-latest
     runs-on: ubuntu-latest
 
     steps:
