@@ -33,6 +33,9 @@ pub const Version = enum {
     V8,
 };
 
+pub const ZERO: UUID = 0;
+pub const MAX: UUID = std.math.maxInt(UUID);
+
 /// Errors that can occur when determining a UUID version.
 pub const VersionError = error{
     /// The version field did not correspond to any recognized version.

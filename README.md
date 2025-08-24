@@ -31,7 +31,7 @@ After this your `build.zig.zon` should look like this:
         // ...
 
         .uuiz = .{
-            .url = "https://github.com/your-username/uuiz/archive/refs/tags/v0.1.0.tar.gz",
+            .url = "https://github.com/rrchelbi/uuiz?ref=main#...",
             .hash = "1220...",
         },
     },
@@ -81,6 +81,7 @@ const Version = enum {
 };
 
 // Layout struct for direct field access
+// This struct is not DoD yet, more work needed!
 const Layout = struct {
     clock_seq_hi_and_res: u8,
     clock_seq_low: u8,
