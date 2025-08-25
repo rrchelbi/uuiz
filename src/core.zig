@@ -1,3 +1,7 @@
+const std = @import("std");
+const mem = std.mem;
+const builtin = std.builtin;
+
 /// Represents a UUID as a 128-bit unsigned integer.
 ///
 /// Internally, UUIDs are 16 bytes (128 bits). This type alias is used
@@ -5,35 +9,36 @@
 pub const UUID = u128;
 
 pub const Variant = enum {
-    NCS,
-    MS,
-    FutureDefinition,
-    RFC4122,
+    ncs,
+    ms,
+    rfc4122,
 };
+
+pub const VariantError = error{UndefinedVariant};
 
 /// Enumeration of all UUID versions defined by RFC 4122 and newer drafts.
 ///
 /// Each version corresponds to a different generation strategy
 pub const Version = enum {
     /// Time-based
-    V1,
+    v1,
     /// DCE Security (time + POSIX UID/GID)
-    V2,
+    v2,
     /// Name-based (MD5 hashing)
-    V3,
+    v3,
     /// Random
-    V4,
+    v4,
     /// Name-based (SHA-1 hashing)
-    V5,
+    v5,
     /// Reordered time-based (proposed, time-ordered UUIDs)
-    V6,
+    v6,
     /// Unix time + random bits (proposed, recommended for many cases)
-    V7,
+    v7,
     /// Custom application-defined format (proposed, reserved)
-    V8,
+    v8,
 };
 
-pub const ZERO: UUID = 0;
+pub const NIL: UUID = 0;
 pub const MAX: UUID = std.math.maxInt(UUID);
 
 /// Errors that can occur when determining a UUID version.
@@ -72,18 +77,26 @@ pub const ParsedUUID = struct {
 /// std.debug.print("Version: {}\n", .{v});
 /// ```
 pub fn version(uuid: UUID) VersionError!Version {
-    const big_uuid = mem.nativeToBig(UUID, uuid);
-    const flag: u4 = @intCast((big_uuid >> 76) & 0xF);
+    const flag = @as(u4, @truncate(uuid >> 76));
     return switch (flag) {
-        1 => Version.V1,
-        2 => Version.V2,
-        3 => Version.V3,
-        4 => Version.V4,
-        5 => Version.V5,
-        6 => Version.V6,
-        7 => Version.V7,
-        8 => Version.V8,
+        1 => Version.v1,
+        2 => Version.v2,
+        3 => Version.v3,
+        4 => Version.v4,
+        5 => Version.v5,
+        6 => Version.v6,
+        7 => Version.v7,
+        8 => Version.v8,
         else => VersionError.UndefinedVersion,
+    };
+}
+
+pub fn variant(uuid: UUID) Variant {
+    const flag = @as(u2, @truncate(uuid >> 62));
+    return switch (flag) {
+        0b00, 0b01 => .ncs,
+        0b10 => .rfc4122,
+        0b11 => .ms,
     };
 }
 
@@ -108,6 +121,35 @@ pub fn parse(uuid: UUID) Layout {
     };
 }
 
-const std = @import("std");
-const mem = std.mem;
-const builtin = std.builtin;
+pub fn string(uuid: UUID) [36]u8 {
+    const big = std.mem.nativeToBig(UUID, uuid);
+    const bytes = std.mem.asBytes(&big);
+
+    var result: [36]u8 = undefined;
+
+    inline for (0..4) |i| {
+        _ = std.fmt.bufPrint(result[i * 2 .. i * 2 + 2], "{x:0>2}", .{bytes[i]}) catch unreachable;
+    }
+    result[8] = '-';
+
+    inline for (0..2) |i| {
+        _ = std.fmt.bufPrint(result[9 + i * 2 .. 9 + i * 2 + 2], "{x:0>2}", .{bytes[4 + i]}) catch unreachable;
+    }
+    result[13] = '-';
+
+    inline for (0..2) |i| {
+        _ = std.fmt.bufPrint(result[14 + i * 2 .. 14 + i * 2 + 2], "{x:0>2}", .{bytes[6 + i]}) catch unreachable;
+    }
+    result[18] = '-';
+
+    inline for (0..2) |i| {
+        _ = std.fmt.bufPrint(result[19 + i * 2 .. 19 + i * 2 + 2], "{x:0>2}", .{bytes[8 + i]}) catch unreachable;
+    }
+    result[23] = '-';
+
+    inline for (0..6) |i| {
+        _ = std.fmt.bufPrint(result[24 + i * 2 .. 24 + i * 2 + 2], "{x:0>2}", .{bytes[10 + i]}) catch unreachable;
+    }
+
+    return result;
+}
