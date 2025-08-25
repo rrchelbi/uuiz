@@ -1,6 +1,45 @@
+//! UUID Version 1 (Time-based UUID) Generation
+//!
+//! This module provides functionality for generating and working with
+//! UUID version 1 as specified in RFC 4122. Version 1 UUIDs are based on
+//! the current timestamp, clock sequence, and node identifier, ensuring
+//! uniqueness across time and nodes.
+//!
+//! ## Features
+//! - Time-based UUID generation using system time in 100-nanosecond intervals
+//! - Proper setting of version (v1) and variant fields according to RFC 4122
+//! - Maintains sequence to avoid collisions within the same timestamp
+//! - Randomized node identifier and clock sequence for uniqueness across machines
+//!
+//! ## Example
+//! ```zig
+//! var gen = v1.init();
+//! const uuid = gen.new();
+//! // uuid is now a valid version 1 UUID with proper variant and version bits
+//! ```
+//!
+//! ## RFC 4122 Compliance
+//! The generated UUIDs comply with section 4.2 of RFC 4122:
+//! - **Version field (bits 12-15):** set to 0001 (1)
+//! - **Variant field (bits 6-7):** set to 10 (RFC 4122 variant)
+//! - **Time fields:** represent timestamp in 100-ns intervals since 1582-10-15
+//! - **Node and Clock Sequence:** randomized for uniqueness
+//!
+//! ## Notes
+//! - This implementation uses `std.time.nanoTimestamp()` for time retrieval
+//! - If multiple UUIDs are generated within the same timestamp, a 14-bit sequence counter ensures uniqueness
+
+const core = @import("core.zig");
+const std = @import("std");
+const testing = std.testing;
+
+/// Last generated timestamp in 100-nanosecond units
 last_timestamp: u64 = 0,
+/// Sequence counter to avoid duplicates within the same timestamp
 sequence: u14 = 0,
+/// Randomly generated 48-bit node identifier
 node_id: u48,
+/// Randomly generated 14-bit clock sequence
 clock_seq: u14,
 
 const Random = std.Random;
@@ -11,6 +50,12 @@ const UUID_V1_EPOCH: i64 = 0x01B21DD213814000; // Oct 15, 1582 in 100ns interval
 
 const Self = @This();
 
+/// Initializes a new UUID v1 generator
+///
+/// This function seeds a pseudo-random generator with the current system timestamp,
+/// then generates a random node identifier (48 bits) and clock sequence (14 bits).
+///
+/// Returns: A new instance of the UUID v1 generator.
 pub fn init() Self {
     const seed = @as(u64, @bitCast(time.timestamp()));
     var prng = Random.DefaultPrng.init(seed);
@@ -22,6 +67,12 @@ pub fn init() Self {
     };
 }
 
+/// Generates a new UUID version 1
+///
+/// This function constructs a UUID using the current timestamp (in 100ns intervals since the UUID epoch),
+/// the node identifier, and the clock sequence. The version and variant bits are set according to RFC 4122.
+///
+/// Returns: A new UUID v1 as a 128-bit integer.
 pub fn new(self: *Self) UUID {
     const timestamp = self.gettimestamp();
     const time_low = @as(u32, @truncate(timestamp));
@@ -40,6 +91,12 @@ pub fn new(self: *Self) UUID {
     return uuid;
 }
 
+/// Retrieves the current timestamp in 100ns intervals since the UUID epoch
+///
+/// If the timestamp is the same as the last generated timestamp, the sequence counter is incremented.
+/// Otherwise, the sequence counter is reset to zero.
+///
+/// Returns: The current timestamp adjusted for the UUID v1 epoch.
 fn gettimestamp(self: *Self) u64 {
     const now_ns = time.nanoTimestamp();
     const timestamp_100ns = @as(u64, @intCast(now_ns)) / 100 + @as(u64, @intCast(UUID_V1_EPOCH));
@@ -54,5 +111,11 @@ fn gettimestamp(self: *Self) u64 {
     return timestamp_100ns;
 }
 
-const core = @import("core.zig");
-const std = @import("std");
+test "generate valid uuid v1" {
+    var g = init();
+    const id = g.new();
+    const vers = try core.version(id);
+    const variant = core.variant(id);
+    try testing.expectEqual(vers, core.Version.v1);
+    try testing.expectEqual(variant, core.Variant.rfc4122);
+}
