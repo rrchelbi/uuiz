@@ -24,11 +24,12 @@
 
 const std = @import("std");
 const testing = std.testing;
-const crypto = std.crypto;
+const rand = std.crypto.random;
 
 const core = @import("core.zig");
 
-const rand = crypto.random;
+const UUID = core.UUID;
+const ParseError = core.ParseError;
 
 /// Generates a new random UUID version 4 (random UUID)
 ///
@@ -37,20 +38,22 @@ const rand = crypto.random;
 /// version and variant fields which are set according to the specification.
 ///
 /// Returns: A new randomly generated UUID v4
-pub fn new() core.UUID {
-    var uuid: core.UUID = rand.int(core.UUID);
-    uuid &= 0xFFFFFFFFFFFFFF3FFF0FFFFFFFFFFFFF;
-    uuid |= 0x00000000000000800040000000000000;
+pub fn new() UUID {
+    var uuid: UUID = rand.int(UUID);
+    uuid = (uuid & ~(@as(UUID, 0xF) << 76)) | (@as(UUID, 0x4) << 76);
+    uuid = (uuid & ~(@as(UUID, 0x3) << 62)) | (@as(UUID, 0x2) << 62);
     return uuid;
 }
 
-pub fn from(unknown: []const u8) core.ParseError!core.UUID {
+pub fn from(unknown: []const u8) ParseError!UUID {
     _ = unknown;
     return new();
 }
 
 test "generate valid v4 uuid" {
-    const uuid = new();
-    const v = try core.version(uuid);
-    try testing.expectEqual(v, core.Version.V4);
+    const id = new();
+    const vers = try core.version(id);
+    const variant = try core.variant(id);
+    try testing.expectEqual(vers, core.Version.v4);
+    try testing.expectEqual(variant, core.Variant.rfc4122);
 }
