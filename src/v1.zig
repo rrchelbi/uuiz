@@ -29,22 +29,22 @@
 //! - This implementation uses `std.time.nanoTimestamp()` for time retrieval
 //! - If multiple UUIDs are generated within the same timestamp, a 14-bit sequence counter ensures uniqueness
 
-const core = @import("core.zig");
 const std = @import("std");
 const testing = std.testing;
+const Random = std.Random;
+const time = std.time;
+
+const lib = @import("root.zig");
+const UUID = lib.UUID;
 
 /// Last generated timestamp in 100-nanosecond units
 last_timestamp: u64 = 0,
 /// Sequence counter to avoid duplicates within the same timestamp
-sequence: u14 = 0,
+sequesce: u14 = 0,
 /// Randomly generated 48-bit node identifier
 node_id: u48,
 /// Randomly generated 14-bit clock sequence
 clock_seq: u14,
-
-const Random = std.Random;
-const time = std.time;
-const UUID = core.UUID;
 
 const UUID_V1_EPOCH: i64 = 0x01B21DD213814000; // Oct 15, 1582 in 100ns intervals
 
@@ -114,8 +114,8 @@ fn gettimestamp(self: *Self) u64 {
 test "generate valid uuid v1" {
     var g = init();
     const id = g.new();
-    const vers = try core.version(id);
-    const variant = core.variant(id);
-    try testing.expectEqual(vers, core.Version.v1);
-    try testing.expectEqual(variant, core.Variant.rfc4122);
+    const vers = try lib.version(id);
+    const variant = lib.variant(id);
+    try testing.expectEqual(vers, lib.Version.v1);
+    try testing.expectEqual(variant, lib.Variant.rfc4122);
 }

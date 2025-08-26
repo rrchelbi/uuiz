@@ -27,6 +27,7 @@ const testing = std.testing;
 const rand = std.crypto.random;
 
 const core = @import("core.zig");
+const lib = @import("root.zig");
 
 const UUID = core.UUID;
 const ParseError = core.ParseError;
@@ -52,8 +53,8 @@ pub fn from(unknown: []const u8) ParseError!UUID {
 
 test "generate valid v4 uuid" {
     const id = new();
-    const vers = try core.version(id);
-    const variant = try core.variant(id);
-    try testing.expectEqual(vers, core.Version.v4);
-    try testing.expectEqual(variant, core.Variant.rfc4122);
+    const vers = try lib.version(id);
+    const variant = try lib.variant(id);
+    try testing.expectEqual(vers, lib.Version.v4);
+    try testing.expectEqual(variant, lib.Variant.rfc4122);
 }
