@@ -44,7 +44,7 @@ pub const VersionError = core.VersionError;
 
 pub const version = core.version;
 pub const variant = core.variant;
-pub const string = core.string;
+pub const stringify = core.stringify;
 
 pub const NIL = core.NIL;
 pub const MAX = core.MAX;

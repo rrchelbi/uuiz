@@ -1,5 +1,6 @@
 const std = @import("std");
 const mem = std.mem;
+const testing = std.testing;
 
 /// Represents a UUID as a 128-bit unsigned integer.
 ///
@@ -97,35 +98,33 @@ pub fn variant(uuid: UUID) Variant {
     };
 }
 
-pub fn string(uuid: UUID) [36]u8 {
+pub fn stringify(uuid: UUID) [36]u8 {
     const big = std.mem.nativeToBig(UUID, uuid);
     const bytes = std.mem.asBytes(&big);
 
     var result: [36]u8 = undefined;
 
-    inline for (0..4) |i| {
-        _ = std.fmt.bufPrint(result[i * 2 .. i * 2 + 2], "{x:0>2}", .{bytes[i]}) catch unreachable;
-    }
-    result[8] = '-';
-
-    inline for (0..2) |i| {
-        _ = std.fmt.bufPrint(result[9 + i * 2 .. 9 + i * 2 + 2], "{x:0>2}", .{bytes[4 + i]}) catch unreachable;
-    }
-    result[13] = '-';
-
-    inline for (0..2) |i| {
-        _ = std.fmt.bufPrint(result[14 + i * 2 .. 14 + i * 2 + 2], "{x:0>2}", .{bytes[6 + i]}) catch unreachable;
-    }
-    result[18] = '-';
-
-    inline for (0..2) |i| {
-        _ = std.fmt.bufPrint(result[19 + i * 2 .. 19 + i * 2 + 2], "{x:0>2}", .{bytes[8 + i]}) catch unreachable;
-    }
-    result[23] = '-';
-
-    inline for (0..6) |i| {
-        _ = std.fmt.bufPrint(result[24 + i * 2 .. 24 + i * 2 + 2], "{x:0>2}", .{bytes[10 + i]}) catch unreachable;
-    }
+    // Format: 8-4-4-4-12
+    _ = std.fmt.bufPrint(
+        &result,
+        "{x:0>2}{x:0>2}{x:0>2}{x:0>2}-" ++
+            "{x:0>2}{x:0>2}-" ++
+            "{x:0>2}{x:0>2}-" ++
+            "{x:0>2}{x:0>2}-" ++
+            "{x:0>2}{x:0>2}{x:0>2}{x:0>2}{x:0>2}{x:0>2}",
+        .{
+            bytes[0],  bytes[1],  bytes[2],  bytes[3],
+            bytes[4],  bytes[5],  bytes[6],  bytes[7],
+            bytes[8],  bytes[9],  bytes[10], bytes[11],
+            bytes[12], bytes[13], bytes[14], bytes[15],
+        },
+    ) catch unreachable;
 
     return result;
+}
+
+test "stringify a UUID" {
+    const id = 0x84401971b835468f866d2915ddffc772;
+    const text_id = stringify(id);
+    try testing.expect(std.mem.eql(u8, &text_id, "84401971-b835-468f-866d-2915ddffc772"));
 }
