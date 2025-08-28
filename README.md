@@ -70,25 +70,14 @@ const UUID = u128;
 
 // UUID versions
 const Version = enum {
-    V1, // Time-based
-    V2, // DCE Security
-    V3, // MD5 hash
-    V4, // Random
-    V5, // SHA-1 hash
-    V6, // Ordered time-based
-    V7, // Unix timestamp-based
-    V8, // Custom
-};
-
-// Layout struct for direct field access
-// This struct is not DoD yet, more work needed!
-const Layout = struct {
-    clock_seq_hi_and_res: u8,
-    clock_seq_low: u8,
-    time_mid: u16,
-    time_hi_and_version: u16,
-    time_low: u32,
-    node: u48,
+    v1, // Time-based
+    v2, // DCE Security
+    v3, // MD5 hash
+    v4, // Random
+    v5, // SHA-1 hash
+    v6, // Ordered time-based
+    v7, // Unix timestamp-based
+    v8, // Custom
 };
 ```
 
@@ -96,7 +85,7 @@ const Layout = struct {
 
 | Version | Status | Description |
 |---------|--------|-------------|
-| v1 |    | Time-based with MAC address |
+| v1 | ✅ | Time-based  |
 | v2 |    | DCE Security |
 | v3 |    | MD5 namespace-based |
 | v4 | ✅ | Random (cryptographically secure) |
