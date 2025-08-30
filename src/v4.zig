@@ -54,7 +54,7 @@ pub fn from(unknown: []const u8) ParseError!UUID {
 test "generate valid v4 uuid" {
     const id = new();
     const vers = try lib.version(id);
-    const variant = try lib.variant(id);
+    const variant = lib.variant(id);
     try testing.expectEqual(vers, lib.Version.v4);
     try testing.expectEqual(variant, lib.Variant.rfc4122);
 }

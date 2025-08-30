@@ -40,7 +40,7 @@ const UUID = lib.UUID;
 /// Last generated timestamp in 100-nanosecond units
 last_timestamp: u64 = 0,
 /// Sequence counter to avoid duplicates within the same timestamp
-sequesce: u14 = 0,
+sequence: u14 = 0,
 /// Randomly generated 48-bit node identifier
 node_id: u48,
 /// Randomly generated 14-bit clock sequence
