@@ -50,4 +50,5 @@ pub const NIL = core.NIL;
 pub const MAX = core.MAX;
 
 pub const v1 = @import("v1.zig");
+pub const v3 = @import("v3.zig");
 pub const v4 = @import("v4.zig");
