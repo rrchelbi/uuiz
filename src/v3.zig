@@ -7,25 +7,31 @@ const lib = @import("root.zig");
 const UUID = lib.UUID;
 
 namespace: UUID,
-context: Md5,
+
+pub const Namespace = struct {
+    pub const DNS: UUID = 0x6ba7b8109dad11d180b400c04fd430c8;
+    pub const URL: UUID = 0x6ba7b8119dad11d180b400c04fd430c8;
+    pub const OID: UUID = 0x6ba7b8129dad11d180b400c04fd430c8;
+    pub const X500: UUID = 0x6ba7b8149dad11d180b400c04fd430c8;
+};
+
 
 const Self = @This();
 
 pub fn init(namespace: UUID) Self {
-    var context = Md5.init(.{});
-    const namespace_bytes = lib.stringify(namespace);
-    context.update(&namespace_bytes);
     return .{
         .namespace = namespace,
-        .context = context,
     };
 }
 
-pub fn new(self: *Self, name: []const u8) UUID {
+pub fn new(self: Self, name: []const u8) UUID {
     var hash: [16]u8 = undefined;
+    const bytes = std.mem.asBytes(&self.namespace);
 
-    self.context.update(name);
-    self.context.final(&hash);
+    var context = Md5.init(.{});
+    context.update(bytes[0..]);
+    context.update(name);
+    context.final(&hash);
 
     const hash_bits = mem.readInt(u128, &hash, .big);
 
@@ -43,12 +49,18 @@ pub fn new(self: *Self, name: []const u8) UUID {
     return uuid;
 }
 
-test {
-    const namespace = 0x84401971b835468f866d2915ddffc772;
-    var g = init(namespace);
-    const id = g.new("DNS");
+test "generate valid v3 uuid" {
+    const g = init(Namespace.DNS);
+    const id = g.new("uuiz");
     const vers = try lib.version(id);
     const variant = lib.variant(id);
     try testing.expectEqual(vers, lib.Version.v3);
     try testing.expectEqual(variant, lib.Variant.rfc4122);
+}
+
+test "v3 uuid with the same namespace and the same name should produce same uuid" {
+    const g = init(Namespace.DNS);
+    const id1 = g.new("uuiz");
+    const id2 = g.new("uuiz");
+    try testing.expectEqual(id1, id2);
 }
